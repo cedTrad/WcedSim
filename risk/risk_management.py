@@ -1,0 +1,22 @@
+from .cppi import CPPI
+
+
+class RiskManagement:
+    
+    def __init__(self, capital):
+        self.init_capital = capital
+        self.cppi = CPPI(capital=capital)
+    
+    def config_cppi(self, m, floor):
+        self.cppi.update_value(m, floor)
+        
+    def run(self, capital):
+        self.cppi.update(capital)
+        self.cppi.execute()
+        self.risk_w = self.cppi.risky_w
+        self.safe_w = self.cppi.safe_w
+        self.cushion = self.cppi.cushion
+        
+        self.value_to_risk = capital * self.cppi.risky_w
+        self.value_to_safe = capital * self.cppi.safe_w
+        

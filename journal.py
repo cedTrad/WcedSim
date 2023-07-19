@@ -4,8 +4,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import uuid
 
-from database.base import Base
-from database.table import Trades, Portfolio_tab
+from db.base import Base
+from db.table import Trades, Portfolio_tab
 
 
 class Journal:
@@ -14,7 +14,7 @@ class Journal:
         self.name = 'w'
         self.portfolio_data = pd.DataFrame()
         self.data = pd.DataFrame()
-        self.engine = create_engine(f"sqlite:///database/data.db")
+        self.engine = create_engine(f"sqlite:///db/data_.db")
         
         
     def asset(self, date, price, asset):

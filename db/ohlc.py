@@ -7,13 +7,16 @@ import pytz
 from IPython.display import clear_output
 
 
+path = "C:/Users/cc/Desktop/CedAlgo/database/"
 def createEngine(interval = '1h'):
-    return sqlalchemy.create_engine('sqlite:///database_{}.db'.format(interval))
+    return sqlalchemy.create_engine('sqlite:///'+path+'database_{}.db'.format(interval))
+
 
 
 def tableName(engine):
     ins = sqlalchemy.inspect(engine)
     return ins.get_table_names()
+
 
 
 # Structurer les donnees
@@ -28,6 +31,8 @@ def structureData(X, symbol):
     data['volume'] = pd.to_numeric(data['volume'])
     data['symbol'] = symbol
     return data
+
+
 
 #  Importation data
 def LoadData(symbol, start, interval):
@@ -93,6 +98,8 @@ def Load_data(token, interval , start):
         print("{token} successful load")   
 
 
+
+
 def update_data(assets ,interval):
     i= 1 ; n = len(assets)
     begin = '1 Jan, 2017'
@@ -124,6 +131,4 @@ def asset_binance():
     coins = list(set(coins))
     return coins
 
-all_asset = asset_binance()
-interval_defaut = '1h'
 

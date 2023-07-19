@@ -18,22 +18,34 @@ class Preprocessing:
             
     
     def add_features(self, trade):
-        #trade['market_r'] = trade.price.pct_change()
-        #trade['market'] = (1 + trade.market_r).cumprod()
-        
         trade['gp'] = np.where((trade['status'] == 'open') | ((trade['position'] == 0) & (trade['status'] != 'close')),
                                0, trade.pnl.diff())
         trade['cum_gp'] = trade.gp.cumsum()
         
     
-    def pre_preprocess(self, trade):
-        try:
-            trade.drop(columns = ['key'], inplace = True)
-        except:
-            ""
-        trade.set_index('date', inplace = True)
-        trade['value2'] = trade['value'] + trade['out_value']
-    
+    def pre_preprocess(self, trade = None, portfolio_data = None ):
+        trade = trade.copy()
+        portfolio_data = portfolio_data.copy()
+        if trade is not None:
+            try:
+                trade.drop(columns = ['key'], inplace = True)
+            except:
+                pass
+            trade.set_index('date', inplace = True)
+            trade['value2'] = trade['value'] + trade['out_value']
+        
+        if portfolio_data is not None:
+            try:
+                portfolio_data.drop(columns = ['key'], inplace = True)
+            except:
+                pass
+        portfolio_data.set_index('date', inplace = True)
+        portfolio_data = portfolio_data.groupby('date').last().copy()
+        portfolio_data["rets"] = portfolio_data["capital"].pct_change()
+        portfolio_data["cum_rets"] = (portfolio_data["rets"] + 1).cumprod()
+        
+        return trade, portfolio_data
+        
         
         
     def get_signal(self, trade):

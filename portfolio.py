@@ -8,6 +8,7 @@ class Asset:
         self.symbol = symbol
         self.quantity = 0
         self.value = 0
+        self.leverage = 1
         self.borrow = 0
         self.position = 0
         self.in_value = 0
@@ -21,11 +22,17 @@ class Asset:
     def update_quantity(self, quantity):
         self.quantity += quantity
     
+    
+    def set_leverage(self, leverage):
+        self.leverage = leverage
+    
+    
     def update_value(self, price):
         self.value = self.get_value(price)
         self.get_pnl_pct()
         self.status = "-"
         self.out_value = 0
+        
         
     def update(self, quantity, price, position, close = False):        
         self.quantity += quantity
@@ -33,7 +40,7 @@ class Asset:
         if close:
             self.value = self.get_value(price)
             self.status = "close"
-            self.pnl = self.out_value - self.in_value
+            self.pnl = (self.out_value - self.in_value) * self.leverage
             self.in_value = 0
         else:
             self.in_value = abs(self.quantity * price)
@@ -61,7 +68,7 @@ class Asset:
             pnl = 0
             
         self.pnl = pnl
-        return pnl
+        return pnl * self.leverage
 
 
     def get_pnl_pct(self):
@@ -78,6 +85,8 @@ class Asset:
 
 
 
+
+
 class Portfolio:
     
     def __init__(self, name, capital):
@@ -90,7 +99,7 @@ class Portfolio:
         
         self.risk_value = 0
         self.safe_value = capital
-        self.safe_value_re = 0
+        self.available_value = capital
         
         self.positions = {}
         self.long_value = 0
@@ -115,7 +124,7 @@ class Portfolio:
         self.assets[asset.symbol] = {'asset' : asset, 'weigth' : w}
         
             
-    def update_risky(self):
+    def update_risky(self, close = False):
         values = 0
         for asset in self.assets.values():
             values += asset['asset'].value
@@ -124,6 +133,7 @@ class Portfolio:
     
     def update_value(self, asset, close = False): # rebalance
         if close:
+            self.update_assets(asset)
             amount = asset.out_value
             self.risk_value -= amount
             self.safe_value += amount
@@ -150,17 +160,7 @@ class Portfolio:
         elif asset.type == "LONG":
             self.assets_long[symbol] = asset
     
-    def long(self, asset_long):
-        value = 0
-        for asset in self.assets_long.values():
-            values += asset.value
-        self.long_value = values
-    
-    def short(self, asset_short):
-        value = 0
-        for asset in self.assets_short.values():
-            values += asset.value
-        self.short_value = values
+
         
 
 

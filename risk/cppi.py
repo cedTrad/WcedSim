@@ -6,6 +6,8 @@ class CPPI:
     
     def __init__(self, capital):
         self.capital = capital
+        self.init_capital = capital
+        
         
     def update_value(self, m, floor, drawdown = None):
         self.m = m
@@ -13,14 +15,16 @@ class CPPI:
         self.drawdown = drawdown
     
     
-    def execute(self):
-        
+    def update(self, capital):
+        self.capital = capital
+    
+    
+    def execute(self, leverage = 1):    
         if self.drawdown is not None:
-            peak = np.maximum(self.value , peak)
+            peak = np.maximum(self.capital , peak)
             self.floor_value = (1 - self.drawdown)*peak
         else:
-            self.floor_value = self.value*self.floor
-        
+            self.floor_value = self.capital*self.floor
         # Cushion
         self.cushion = (self.capital - self.floor_value)/self.capital
         

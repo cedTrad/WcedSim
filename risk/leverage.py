@@ -1,9 +1,11 @@
-from cppi import CPPI
+import pandas as pd
+import numpy as np
 
 
-class RiskManagement:
+
+class Leverage:
     
     def __init__(self, capital):
         self.capital = capital
-    
+        
     

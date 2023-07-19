@@ -106,13 +106,17 @@ def add_scatter(fig, col, row, data, name, color):
         col = col, row = row
     )
 
-def add_bar(fig, col, row, data, name):
+
+def add_bar(fig, col, row, data, feature, name, color = None):
     fig.add_trace(
         go.Bar(
-            x = data.index, y = data[name],
-            name = name
-        )
+            x = data.index, y = data[feature],
+            name = name,
+            marker_color = color
+        ),
+        col = col, row = row
     )
+    
 
 def add_hline(fig, y, col, row, color):
     fig.add_hline(y = y , col = col, row = row, line_color = color)
@@ -146,6 +150,17 @@ def signal_point(fig, col, row, x, y, name, marker, size = 10):
         col = col , row = row
     )
 
+
+def area(fig, x, y, color, name, col = None , row = None):
+    fig.add_trace(
+        go.Scatter(
+            x = x, y = y,
+            fill = "tozeroy",
+            marker_color = color,
+            name = name
+        ),
+        col = col , row = row
+    )
 
 
 

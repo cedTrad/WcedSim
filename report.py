@@ -10,15 +10,16 @@ from plot import *
 
 from evaluation.metric import Metric
 
+
 class Report:
     
-    def __init__(self, name = 'w', interval = "1d", start = "", end = ""):
+    def __init__(self, name = 'w', interval = "1d", start = "", end = "", db_name = "data_"):
         self.name = 'w'
         self.interval = interval
         self.start = start
         self.end = end
         self.db = connect_db(name = "database", interval = self.interval)
-        self.engine = create_engine(f"sqlite:///db/data_.db")
+        self.engine = create_engine(f"sqlite:///db/{db_name}.db")
         self.symbols = []
         self.assets = {}
         self.preprocessing = Preprocessing()
@@ -36,7 +37,7 @@ class Report:
             self.portfolio_data = portfolio_data
             
         self.symbols = list(self.data.symbol.unique())
-        self.trade, self.portfolio_data = self.preprocessing.pre_preprocess(trade = self.data, portfolio_data = self.portfolio_data)
+        self.data, self.portfolio_data = self.preprocessing.pre_preprocess(trade = self.data, portfolio_data = self.portfolio_data)
         self.assets_data = self.preprocessing.split_asset(self.data)
         self.metrics = Metric(data = self.assets_data)
     
@@ -44,10 +45,7 @@ class Report:
     def features(self, data):
         self.preprocessing.add_features(data)
     
-    
-    def get_symbol(self, symbols):
-        self.symbols = symbols
-    
+
     def run(self, data = None, portfolio_data = None):
         # data + pre_processing
         self.get_data(data, portfolio_data)
@@ -58,6 +56,11 @@ class Report:
             self.features(df)
             
         self.metrics.KPI()
+        
+    
+    def viz_cppi(self, fig, data, floor, cushion):
+        add_line(fig, col=None, row=None, data=data, feature=feature, name="floor")
+        add_line(fig, col=None, row=None, data=data, feature=feature, name="cushion")
         
     
     def viz_asset(self, data, asset, portfolio):
@@ -85,7 +88,7 @@ class Report:
         add_line(fig = fig, col=1, row=1, data=portfolio, feature='cum_rets', name='cum_rets', color = "blue")
         
         add_line(fig = fig, col=1, row=2, data=portfolio, feature='capital', name='capital', color = "blue")
-        add_bar(fig = fig, col=1, row=2, data=portfolio, feature='safe_value', name='safe_value', color = "green")
+        add_bar(fig = fig, col=1, row=2, data=portfolio, feature='available_value', name='available_value', color = "green")
         add_bar(fig = fig, col=1, row=2, data=portfolio, feature='risk_value', name='risk_value', color = "red")
         
         colors = np.where(portfolio["rets"]>0, "green", "red")
@@ -109,7 +112,7 @@ class Report:
         
     
         
-    def plot(self, feature):
+    def plot(self, feature, bar = False):
         
         portfolio = self.portfolio_data
         try:
@@ -121,16 +124,19 @@ class Report:
         fig = subplots2(nb_rows=rows+1, nb_cols=1)
         
         for i, symbol in enumerate(self.symbols):
-            data = self.assets_data[symbol]            
-            add_line(fig = fig, col=1, row=i+1, data=data, feature = feature, name=f'{symbol}')
-        
+            data = self.assets_data[symbol]
+            
+            if bar:
+                add_bar(fig = fig, col=1, row=i+1, data=data, feature = feature, name=f'{symbol}')
+            else:
+                add_line(fig = fig, col=1, row=i+1, data=data, feature = feature, name=f'{symbol}')
+                
         add_line(fig = fig, col=1, row=rows+1, data=portfolio, feature='capital', name='capital')
-        
         fig.update_layout(height = 350 , width = 800,
                           margin = {'t':0, 'b':0, 'l':0})
         
         return fig
-        
+    
     
     def plot_portfolio(self):
         fig = self.viz_portfolio(self.portfolio_data)

@@ -43,12 +43,30 @@ class Portfolio_tab(Base):
     key = Column(String, primary_key = True)
     date = Column(String)
     risk_value = Column(Float)
-    safe_value = Column(Float)
+    available_value = Column(Float)
     capital = Column(Float)
+    
+    value_to_risk = Column(Float)
+    value_to_safe = Column(Float)
+    
+    floor_value = Column(Float)
+    cushion = Column(Float)
+    m = Column(Integer)
+    risk_w = Column(Float)
+    
+    margin = Column(Integer)
+    risk_value = Column(Float)
+    
+    
     
     def __init__(self, add):
         self.key = add['key']
         self.date = str(add['date'])
         self.risk_value = add['risk_value']
-        self.safe_value = add['safe_value']
+        self.available_value = add['available_value']
         self.capital = add['capital']
+        self.value_to_risk = add['value_to_risk']
+        self.value_to_safe = add['value_to_safe']
+        self.floor_value = add['floor_value']
+        self.cushion = add['cushion']
+        self.risky_w = add['risky_w']

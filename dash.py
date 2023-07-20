@@ -26,7 +26,7 @@ class StApp(App):
     
     def run(self):
         
-        self.risk_config()
+        self.portfolio.config(m = 3.5, floor = 0.7)
         
         self.set_assets()
         
@@ -61,10 +61,10 @@ class StApp(App):
                 st.title(" ----- ----- ----- -----")
                 col1, col2 = st.columns(2)
                 with col1:
-                    fig = self.report.plot("value")
+                    fig = self.report.plot("cum_gp")
                     st.plotly_chart(fig, True)
                 with col2:
-                    fig = self.report.plot("pnl")
+                    fig = self.report.plot("pnl", bar=True)
                     st.plotly_chart(fig, True)
                 
                 fig = self.report.plot_portfolio()

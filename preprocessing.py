@@ -26,6 +26,7 @@ class Preprocessing:
     def pre_preprocess(self, trade = None, portfolio_data = None ):
         trade = trade.copy()
         portfolio_data = portfolio_data.copy()
+        
         if trade is not None:
             try:
                 trade.drop(columns = ['key'], inplace = True)

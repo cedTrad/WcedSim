@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from risk.risk_management import RiskManagement
+
 
 class Asset:
     
@@ -98,7 +100,6 @@ class Portfolio:
         self.assets_short = {}
         
         self.risk_value = 0
-        self.safe_value = capital
         self.available_value = capital
         
         self.positions = {}
@@ -106,6 +107,9 @@ class Portfolio:
         self.short_value = 0
         
         self.type = ""
+        
+        self.risk = RiskManagement(capital)
+        
         
     def add_asset(self, asset, w = 1):
         self.assets[asset.symbol] = {'asset' : asset, 'weigth' : w}
@@ -116,41 +120,32 @@ class Portfolio:
     
     
     def update_assets(self, asset, w = 1):
-        """
-        Args:
-            asset ([object]): asset object
-            w ([float]) : Poid de l'actif dans le portfolio
-        """
         self.assets[asset.symbol] = {'asset' : asset, 'weigth' : w}
         
             
-    def update_risky(self, close = False):
+    def update_risky(self, asset, close = False):
         values = 0
+        self.update_assets(asset)
         for asset in self.assets.values():
             values += asset['asset'].value
         self.risk_value = values
         
     
     def update_value(self, asset, close = False): # rebalance
-        if close:
-            self.update_assets(asset)
-            amount = asset.out_value
-            self.risk_value -= amount
-            self.safe_value += amount
-            self.capital = self.risk_value + self.safe_value
+        self.update_risky(asset)
         
-        else:
-            self.update_assets(asset)
-            self.update_risky()
-            self.capital = self.risk_value + self.safe_value
+        if close:
+            amount = asset.out_value
+            self.available_value += amount
+            
+        self.capital = self.risk_value + self.available_value
         
     
     def rebalance(self, amount):        
         self.risk_value += amount
-        self.safe_value -= amount
-        self.capital = self.risk_value + self.safe_value
+        self.available_value -= amount
+        self.capital = self.risk_value + self.available_value
         
-    
     
     
     def set_type(self, asset):
@@ -160,7 +155,11 @@ class Portfolio:
         elif asset.type == "LONG":
             self.assets_long[symbol] = asset
     
-
+    def config(self, m, floor):
+        self.risk.config_cppi(m=m, floor=floor)
+    
+    def management(self):
+        self.risk.run(self.capital)
         
 
 

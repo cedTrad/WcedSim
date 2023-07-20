@@ -35,7 +35,12 @@ class Journal:
         
     def portfolio(self, date, portfolio):
         data = {'date' : date, 'risk_value' : portfolio.risk_value,
-                'safe_value' : portfolio.safe_value, 'capital' : portfolio.capital}
+                'available_value' : portfolio.available_value, 'capital' : portfolio.capital,
+                'value_to_risk' : portfolio.risk.value_to_risk,
+                'value_to_safe' : portfolio.risk.value_to_safe,
+                'floor_value' : portfolio.risk.floor_value ,'cushion' : portfolio.risk.cushion,
+                'risky_w' : portfolio.risk.risky_w}
+        
         add = pd.DataFrame(data, index = [date])
         self.portfolio_data = self.portfolio_data.append(add)
         

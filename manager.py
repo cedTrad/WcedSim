@@ -15,7 +15,7 @@ class Manager:
         self.thresold_amount = 11
         
     def check_balance(self, amount):
-        if self.portfolio.safe_value < amount:
+        if self.portfolio.available_value < amount:
             return 101
         elif amount < self.thresold_amount:
             return 102

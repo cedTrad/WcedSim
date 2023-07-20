@@ -5,7 +5,7 @@ import numpy as np
 class CPPI:
     
     def __init__(self, capital):
-        self.capital = capital
+        #self.capital = capital
         self.init_capital = capital
         
         
@@ -24,7 +24,7 @@ class CPPI:
             peak = np.maximum(self.capital , peak)
             self.floor_value = (1 - self.drawdown)*peak
         else:
-            self.floor_value = self.capital*self.floor
+            self.floor_value = self.init_capital*self.floor
         # Cushion
         self.cushion = (self.capital - self.floor_value)/self.capital
         

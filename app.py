@@ -12,8 +12,6 @@ from risk.risk_management import RiskManagement
 from db.data import connect_db
 
 
-
-
 class App:
     
     def __init__(self, symbols, capital, interval = "1d", start = "2023", end = "2023"):
@@ -24,14 +22,16 @@ class App:
         self.capital = capital
         self.prev_decision = None
         self.order = OrderManagement(capital)
+        
         self.portfolio = Portfolio("W", capital)
+        
         self.journal = Journal()
         
         self.signal = Signal()
         self.report = Report(start = start, end = end)
         self.manager = Manager(self.portfolio)
         
-        self.risk_management = RiskManagement(capital)
+        
     
     
     def get_signal(self, bar, symbol, interval = "1d"):
@@ -44,16 +44,20 @@ class App:
         self.signal.update_df(data, symbol)
         
         i = -1
-        side = self.signal.get_signal(i)
-        #model = f"model_{symbol}"
-        #side = self.signal.get_ml_signal(bar, model = model)
+        #side = self.signal.get_signal(i)
+        model = f"model_{symbol}"
+        side = self.signal.get_ml_signal(bar = i , model = model)
         
         date, price = data.index[i], data.close.iloc[i]
         signals = (date, price, side)
         
         return signals
+    
+    
+    def risk_config(self, m, floor):
+        self.portfolio.risk.config_cppi(m=m, floor=floor)
+          
         
-     
         
     def execute(self, asset, bar):
         symbol = asset.symbol
@@ -63,14 +67,12 @@ class App:
         price = signal[1]
         date = signal[0]
         
-        capital = self.portfolio.capital
-        self.risk_management.run(capital)
+        self.portfolio.management()
+        value_to_risk_p = self.portfolio.risk.value_to_risk
         
-        value_to_risk = self.risk_management.value_to_risk
-        value_to_safe = self.risk_management.value_to_safe
         leverage = 1
         
-        amount = value_to_risk
+        amount = value_to_risk_p
         quantity = amount / signal[1]
         
         check = self.manager.check_balance(amount)
@@ -89,11 +91,7 @@ class App:
             self.portfolio.update_value(asset, close=True)
         
         self.journal.save_data(date, price, asset, self.portfolio)
-        
-        
-        
-    def risk_config(self):
-        self.risk_management.config_cppi(m=3, floor=0)
+    
     
     def set_assets(self):
         self.assets = {}
@@ -108,11 +106,11 @@ class App:
         
     
     def run(self):
-        self.risk_config()
         
+        self.portfolio.config(m = 3, floor = 0)
         self.set_assets()
-        
         bar = 1
+        
         while True:
             self.apply(bar)
             

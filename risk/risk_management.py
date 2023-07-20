@@ -13,7 +13,9 @@ class RiskManagement:
     def run(self, capital):
         self.cppi.update(capital)
         self.cppi.execute()
-        self.risk_w = self.cppi.risky_w
+        
+        self.floor_value = self.cppi.floor_value
+        self.risky_w = self.cppi.risky_w
         self.safe_w = self.cppi.safe_w
         self.cushion = self.cppi.cushion
         

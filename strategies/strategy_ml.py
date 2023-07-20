@@ -1,5 +1,5 @@
-from fenginering.indicator import *
-from fenginering.transformer import *
+from .fenginering.indicator import *
+from .fenginering.transformer import *
 
 import joblib
 
@@ -21,21 +21,23 @@ class Ml:
     def __init__(self, data):
         self.data = data.copy()
         
-    def get_model(self, model):
-        return joblib.load(f'ml/model/{model}.joblib')
+    def get_model(self, model_id):
+        return joblib.load(f'strategies/model/{model_id}.joblib')
     
-    def run(self, bar, model= "model_1d"):
+    def run(self, bar, model_id = "model_1d"):
         
         self.data = transform(self.data)
-        x = self.data.iloc[bar].values.reshape([1, -1])
+        if len(self.data) < 31:
+            return None
         
-        model = self.get_model(model)
+        x = self.data.iloc[bar].values.reshape([1, -1])
+        model = self.get_model(model_id)
         side = model.predict(x)[0]
         proba = model.predict_proba(x)[:,1][0]
         
-        if proba > 0.7:
+        if proba > 0.6:
             return "LONG"
-        elif proba < 0.3:
+        elif proba < 0.4:
             return "SHORT"
         else:
             return None

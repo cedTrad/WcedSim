@@ -11,16 +11,35 @@ class Preprocessing:
     
     def split_asset(self, data):
         asset_data = {}
+        temp = {}
         symbols = data.symbol.unique()
         for i, symbol in enumerate(symbols):
             asset_data[symbol] = data[data.symbol == symbol]
-        return asset_data
             
+            df = data[data.symbol == symbol]
+            temp["data"] = df
+            temp["long"], temp["short"] = self.split_lS(df)
+            
+            asset_data[symbol] = temp
+            
+        return asset_data
+    
+    
+    def split_lS(self, trade):
+        loc_long = np.where((trade["type_"] == "LONG") | ((trade["type_"] == None) & (trade["status"] == "close")))
+        loc_short = np.where((trade["type_"] == "SHORT") | ((trade["type_"] == None) & (trade["status"] == "close")))
+        
+        trade_long = trade.iloc[loc_long]
+        trade_short = trade.iloc[loc_short]
+        
+        return trade_long, trade_short
+    
     
     def add_features(self, trade):
         trade['gp'] = np.where((trade['status'] == 'open') | ((trade['position'] == 0) & (trade['status'] != 'close')),
                                0, trade.pnl.diff())
-        trade['cum_gp'] = trade.gp.cumsum()
+        trade['rets'] = np.where((trade['status'] == 'open') | ((trade['position'] == 0) & (trade['status'] != 'close')),
+                               0, trade.value2.pct_change())
         
     
     def pre_preprocess(self, trade = None, portfolio_data = None ):

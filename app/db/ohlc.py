@@ -12,12 +12,9 @@ def createEngine(interval = '1h'):
     return sqlalchemy.create_engine('sqlite:///'+path+'database_{}.db'.format(interval))
 
 
-
 def tableName(engine):
     ins = sqlalchemy.inspect(engine)
     return ins.get_table_names()
-
-
 
 # Structurer les donnees
 def structureData(X, symbol):
@@ -31,7 +28,6 @@ def structureData(X, symbol):
     data['volume'] = pd.to_numeric(data['volume'])
     data['symbol'] = symbol
     return data
-
 
 
 #  Importation data
@@ -115,7 +111,6 @@ def update_data(assets ,interval):
             fail.append(token)
     print("loading fail for ... : ",fail)
     
-
 
 def asset_binance():
     pair = [] ; coins = [] ; quotes = []

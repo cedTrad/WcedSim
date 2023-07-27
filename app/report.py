@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 from .db.data import connect_db
 from .preprocessing import Preprocessing
 from .plot import *
+from .pnl_analysis import PNL
 
 from .evaluation.metric import Metric
 
@@ -40,6 +41,7 @@ class Report:
         self.data, self.portfolio_data = self.preprocessing.pre_preprocess(trade = self.data, portfolio_data = self.portfolio_data)
         self.assets_data = self.preprocessing.split_asset(self.data)
         self.metrics = Metric(data = self.assets_data)
+        self.pnl = PNL(self.assets_data)
     
     
     def features(self, data):
@@ -53,9 +55,11 @@ class Report:
         # add feature for viz
         for symbol in self.symbols:
             df = self.assets_data[symbol]
-            self.features(df)
-            
-        self.metrics.KPI()
+            self.preprocessing.add_features(df["data"])
+            self.preprocessing.add_features(df["long"])
+            self.preprocessing.add_features(df["short"])
+            #self.features(df)
+        self.metrics.run()
         
     
     def viz_cppi(self, fig, data, floor, cushion):
@@ -68,8 +72,8 @@ class Report:
         
         fig = subplots(nb_rows=3, nb_cols=1, row_heights=[0.2, 0.6, 0.2])
         
-        add_line(fig=fig, col=1, row=1, data=asset, feature='pnl_pct', name='pnl_pct')
-        add_bar(fig=fig, col=1, row=1, data=asset, feature='pnl_pct', name='pnl_pct')
+        add_line(fig=fig, col=1, row=1, data=asset, feature='rets', name='return')
+        #add_bar(fig=fig, col=1, row=1, data=asset, feature='pnl_pct', name='pnl_pct')
         add_second_y(fig=fig, col=1, row=1, data=asset, name='position')
         
         plot_candle(fig=fig, col=1, row=2, data=data, symbol='ohlc')
@@ -77,7 +81,8 @@ class Report:
         signal_point(fig, col=1, row=2, x = exit_point.index, y = exit_point.price, name='out', marker=(6, 10, 'black'))
         color_trades(fig=fig, col=1, row=2, entry=entry_point, exit=exit_point, opacity=0.1)
         
-        add_line(fig=fig, col=1, row=3, data=asset, feature='cum_gp', name='cum_gp')
+        add_bar(fig=fig, col=1, row=3, data=asset, feature='pnl', name='pnl')
+        add_second_y(fig=fig, col=1, row=3, data=asset, name='pnl_pct')
         return fig
     
     
@@ -106,7 +111,7 @@ class Report:
         data = self.db.get_data(symbol, start = start, end = end)
         data = data.loc[start : end]
         
-        fig = self.viz_asset(data, self.assets_data[f'{asset}'], self.portfolio_data)
+        fig = self.viz_asset(data, self.assets_data[f'{asset}']["data"], self.portfolio_data)
         fig.update_layout(height = 1000 , width =1500)
         return fig
         
@@ -124,7 +129,7 @@ class Report:
         fig = subplots2(nb_rows=rows+1, nb_cols=1)
         
         for i, symbol in enumerate(self.symbols):
-            data = self.assets_data[symbol]
+            data = self.assets_data[symbol]["data"]
             
             if bar:
                 add_bar(fig = fig, col=1, row=i+1, data=data, feature = feature, name=f'{symbol}')
@@ -132,7 +137,7 @@ class Report:
                 add_line(fig = fig, col=1, row=i+1, data=data, feature = feature, name=f'{symbol}')
                 
         add_line(fig = fig, col=1, row=rows+1, data=portfolio, feature='capital', name='capital')
-        fig.update_layout(height = 350 , width = 800,
+        fig.update_layout(height = 500 , width = 1000,
                           margin = {'t':0, 'b':0, 'l':0})
         
         return fig

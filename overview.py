@@ -20,9 +20,31 @@ st.title("OverViews")
 with st.sidebar:
     
     st.write("hello")
-    
 
-#streamlit run c:/Users/cc/Desktop/WcedSyst/overview.py
+
+
+
+data_df = pd.DataFrame(
+    {
+        "indicator": [30, 70],
+    }
+)
+
+st.data_editor(
+    data_df,
+    column_config={
+        "indicator": st.column_config.ProgressColumn(
+            "Rate Return",
+            help="Win Rate",
+            format="%f",
+            min_value=0,
+            max_value=100,
+        ),
+    },
+    hide_index=True,
+)
+
+# streamlit run c:/Users/cc/Desktop/WcedSyst/overview.py
 
 
 

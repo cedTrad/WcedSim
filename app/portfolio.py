@@ -45,7 +45,7 @@ class Asset:
             self.value = self.get_value(price)
             self.status = "close"
             self.pnl = (self.out_value - self.in_value) * self.leverage
-            self.in_value = 0
+            #self.in_value = 0
         else:
             self.in_value = abs(self.quantity * price)
             self.value = self.get_value(price)
@@ -57,7 +57,6 @@ class Asset:
     def get_out_value(self, price):
         self.update_value(price)
         self.out_value = self.value
-        
     
     def pnl_value(self, price):
         pnl = 0

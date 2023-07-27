@@ -7,7 +7,7 @@ import time
 import json
 from collections import deque, defaultdict
 
-from utils import *
+from utils import convert, convert2
 
 from app.plot import *
 from app.exchange.order import Order
@@ -35,7 +35,6 @@ st.set_page_config(
 def update_portfolio():
     portfolio = Portfolio()
     portfolio.futureAccountInfo()
-
     wallet = portfolio.wallet
     wallet = convert(wallet)
     assets = portfolio.assets
@@ -61,8 +60,9 @@ nb_tickers = len(ORDER_SYMBOLS)
 
 dcrm = DCRM()
 
+
+
 #  ----------- Progress bar ----------
-#bar = st.progress(0)
 now = datetime.datetime.now()
 st.write(now.strftime("%H:%M:%S"))
 
@@ -116,12 +116,12 @@ with st.container():
                        Margin= TICKERS_MARGIN)
         st.plotly_chart(fig, True)
 
+
 # --- Plot Portfolio ---
 with st.expander('Graphique'):
     st.write("Total Margin Evolution")
     st.write("Wallet Balance")
-
-
+    
 
 
 st.title("Order")
@@ -176,6 +176,7 @@ st.title("Position")
 with st.expander("View All positions"):
     st.dataframe(df)
 
+@st.cache_data(ttl=60 * 10)
 def bullet_data(symbol):
     data = df.copy()
     data_dict = {
@@ -191,7 +192,6 @@ def bullet_data(symbol):
         "markPrice" : data.loc[symbol, "markPrice"],
         "liquidationPrice" : data.loc[symbol, "liquidationPrice"],
         "notional" : data.loc[symbol, "notional"],
-        
     }
     return data_dict
 
@@ -213,5 +213,6 @@ with col1:
 clear_cache = st.button("clear cache")
 if clear_cache:
     update_portfolio.clear()
+    bullet_data.clear()
 
 #streamlit run c:/Users/cc/Desktop/WcedSyst/futures.py

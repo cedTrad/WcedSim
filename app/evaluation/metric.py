@@ -3,17 +3,21 @@ import numpy as np
 
 import scipy.stats
 from scipy.stats import norm
-    
+
+
+pd.options.display.float_format = '{:.2f}'.format
     
 class Metric:
     
     def __init__(self, data):
         self.data = data
+        self.n_trades = 0
         self.symbols = list(data.keys())
         self.df = pd.DataFrame(index = ["total_pnl", "expentancy", "win_rate", "loss_rate",
                                         "amoung_win", "amoung_loss", "avg_win", "avg_loss"]
                                )
-        
+        self.portfolio_df = pd.DataFrame(index = ["total_pnl", "expentancy", "amoung_win", "amoung_loss",
+                                                  "avg_win", "avg_loss"])
         self.df_st = pd.DataFrame()
         
         self.add_st = {"total_pnl": 0, "expentancy" : 0, "win_rate" : 0, "loss_rate" : 0,
@@ -23,6 +27,7 @@ class Metric:
     
     def add_stats(self, symbol):
         self.add_st["symbol"] = symbol
+        self.add_st["n_trades"] = self.n_trades
         self.add_st["total_pnl"] = self.total_pnl
         self.add_st["expentancy"] = self.expectancy
         self.add_st["win_rate"] = self.win_rate
@@ -86,23 +91,23 @@ class Metric:
     
     def stats(self, data):
         loc = np.where((data.status == "close"))
-        n = len(loc[0])
+        self.n_trades = len(loc[0])
         loc = np.where((data.status == "close") & (data.pnl > 0))
-        n_w = len(loc[0])
+        self.win_trades = len(loc[0])
         loc = np.where((data.status == "close") & (data.pnl <= 0))
-        n_l = len(loc[0])
+        self.loss_trades = len(loc[0])
         
         try:
-            self.win_rate = n_w / n
+            self.win_rate = self.win_trades / self.n_trades
         except ZeroDivisionError:
             self.win_rate = 0
         try:
-            self.loss_rate = n_l / n
+            self.loss_rate = self.loss_trades / self.n_trades
         except ZeroDivisionError:
             self.loss_rate = 0
         
         loc = np.where(data.gp != 0)
-        self.avg_gp = data.iloc[loc].mean()
+        self.avg_gp = data.iloc[loc]["gp"].mean()
         self.amoung_win = data.loc[data.gp > 0, "gp"].sum()
         self.amoung_loss = data.loc[data.gp <= 0, "gp"].sum()
         
@@ -125,8 +130,9 @@ class Metric:
         self.df[symbol] = col
         self.add_stats(symbol)
         
-    def KPI(self):
+        
+    def run(self):
         for symbol in self.symbols:
-            data = self.data[symbol]
+            data = self.data[symbol]["data"]
             self.kpi(symbol, data)
             

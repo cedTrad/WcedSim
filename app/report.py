@@ -12,21 +12,25 @@ from .pnl_analysis import PNL
 from .evaluation.metric import Metric
 
 
+
 class Report:
     
-    def __init__(self, name = 'w', interval = "1d", start = "", end = "", db_name = "data_"):
+    def __init__(self, name = 'w', interval = "1d", start = "", end = "",
+                 db_trades = "simulation_"):
         self.name = 'w'
         self.interval = interval
         self.start = start
         self.end = end
         self.db = connect_db(name = "database", interval = self.interval)
-        self.engine = create_engine(f"sqlite:///app/db/{db_name}.db")
+        self.engine = create_engine(f"sqlite:///data/{db_trades}.db")
+        
         self.symbols = []
         self.assets = {}
         self.preprocessing = Preprocessing()
+        self.pnl = PNL(db_trades = db_trades)
     
     
-    def get_data(self, data = None, portfolio_data = None):
+    def get_data(self, data = None, portfolio_data = None, metrics_data = None):
         if data is None:
             self.data = pd.read_sql('trades', self.engine)
         else:
@@ -36,16 +40,16 @@ class Report:
             self.portfolio_data = pd.read_sql('portfolio_tab', self.engine)
         else:
             self.portfolio_data = portfolio_data
+        
+        #if metrics_data is None:
+        #   self.metrics_data = pd.read_sql('metrics', self.engine2)
+        #else:
+        #    self.metrics_data = metrics_data
             
         self.symbols = list(self.data.symbol.unique())
         self.data, self.portfolio_data = self.preprocessing.pre_preprocess(trade = self.data, portfolio_data = self.portfolio_data)
         self.assets_data = self.preprocessing.split_asset(self.data)
-        self.metrics = Metric(data = self.assets_data)
-        self.pnl = PNL(self.assets_data)
-    
-    
-    def features(self, data):
-        self.preprocessing.add_features(data)
+        self.pnl.get_trades(assets_data = self.assets_data)
     
 
     def run(self, data = None, portfolio_data = None):
@@ -58,8 +62,8 @@ class Report:
             self.preprocessing.add_features(df["data"])
             self.preprocessing.add_features(df["long"])
             self.preprocessing.add_features(df["short"])
-            #self.features(df)
-        self.metrics.run()
+        self.pnl.run()
+        self.pnl.report(self.engine)
         
     
     def viz_cppi(self, fig, data, floor, cushion):
@@ -130,7 +134,6 @@ class Report:
         
         for i, symbol in enumerate(self.symbols):
             data = self.assets_data[symbol]["data"]
-            
             if bar:
                 add_bar(fig = fig, col=1, row=i+1, data=data, feature = feature, name=f'{symbol}')
             else:
@@ -145,12 +148,30 @@ class Report:
     
     def plot_portfolio(self):
         fig = self.viz_portfolio(self.portfolio_data)
-        fig.update_layout(height = 600 , width = 1000,
+        fig.update_layout(height = 600 , width = 1400,
                           barmode='stack',
                           margin = {'t':0, 'b':0, 'l':0}
                           )
         return fig
         
+    def plot_cppi(self):
+        fig = subplots2(nb_rows=2, nb_cols=1, row_heights=[0.7, 0.3])
+        add_line(fig = fig, col=1, row=1, data = self.portfolio_data, feature='capital', name='capital', color = "blue")
+        add_line(fig = fig, col=1, row=1, data = self.portfolio_data, feature='floor_value', name='floor_value', color = "red")
         
+        add_line(fig = fig, col=1, row=2, data = self.portfolio_data, feature='risky_w', name='risk_w', color = "blue")
+        
+        fig.update_layout(height = 600 , width = 1000,
+                          margin = {'t':0, 'b':0, 'l':0}
+                          )
+        return fig
     
-    
+    def plot_metric(self, feature):
+        data = self.metrics.df
+        fig = go.Figure()
+        add_line(fig = fig, col=None, row=None, data=data, feature=feature, name=feature, color="blue")
+        fig.update_layout(height = 600 , width = 1000,
+                          margin = {'t':0, 'b':0, 'l':0}
+                          )
+        return fig
+        

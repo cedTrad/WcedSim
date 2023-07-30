@@ -21,14 +21,15 @@ class OrderManagement:
     def open_long(self, asset, price, quantity):
         qty = self.place_order(asset.symbol, price, quantity, side = "BUY")
         asset.type = "LONG"
-        asset.update(quantity = qty, price = price, position = 1)
+        asset.position = 1
+        asset.update(quantity = qty, price = price, status = "open")
         return {'asset' : asset, 'status' : 'LONG'}
     
     
     def close_long(self, asset, price):
-        asset.get_out_value(price)
         qty = self.place_order(asset.symbol, price, quantity = asset.quantity, side = "SELL")
-        asset.update(quantity = qty, price = price, position = 0, close = True)
+        asset.position = 0
+        asset.update(quantity = qty, price = price, status = "close")
         asset.type = "None"
         return {'asset' : asset, 'status' : 'C_LONG'}
         
@@ -36,14 +37,15 @@ class OrderManagement:
     def open_short(self, asset, price, quantity):
         qty = self.place_order(asset.symbol, price, quantity, side = "SELL")
         asset.type = "SHORT"
-        asset.update(quantity = qty, price = price, position = -1)
+        asset.position = -1
+        asset.update(quantity = qty, price = price, status = "open")
         return {'asset' : asset, 'status' : 'SHORT'}
     
     
     def close_short(self, asset, price):
-        asset.get_out_value(price)
         qty = self.place_order(asset.symbol, price, quantity = asset.quantity, side = "BUY")
-        asset.update(quantity = qty, price = price, position = 0, close = True)        
+        asset.position = 0
+        asset.update(quantity = qty, price = price, status = "close")
         asset.type = "None"
         return {'asset' : asset, 'status' : 'C_SHORT'}
         
@@ -78,7 +80,7 @@ class OrderManagement:
             #order = {'asset' : asset, 'status' : "-"}
         
         else:
-            asset.update_value(price = price)
+            asset.update(price = price)
             order = {'asset' : asset, 'status' : "-"}
             
         return order

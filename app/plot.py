@@ -84,7 +84,7 @@ def plot_candle(fig, col, row, data, symbol):
     fig = fig.update_xaxes(rangeslider_visible=False)
 
 
-def add_line(fig, col, row, data, feature, name, color = None):
+def add_line(fig, data, feature, name, color = None, col = None, row = None):
     fig.add_trace(
         go.Scatter(
             x = data.index,
@@ -94,7 +94,7 @@ def add_line(fig, col, row, data, feature, name, color = None):
         col = col, row = row
     )
 
-def add_scatter(fig, col, row, data, name, color):
+def add_scatter(fig, data, name, color, col = None, row = None):
     fig.add_trace(
         go.Scatter(
             x = data.index,
@@ -168,7 +168,7 @@ def color_trades(fig, col, row, entry, exit, opacity):
     
     entry_date = entry.index.to_list()
     exit_date = exit.index.to_list()
-    colors = np.where(entry.type_ == "LONG", 'green', 'red')
+    colors = np.where(entry.side == "LONG", 'green', 'red')
     entry_price = entry.price.to_list()
     exit_price = exit.price.to_list()
     

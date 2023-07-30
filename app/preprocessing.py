@@ -13,26 +13,32 @@ class Preprocessing:
         asset_data = {}
         temp = {}
         symbols = data.symbol.unique()
-        for i, symbol in enumerate(symbols):
-            asset_data[symbol] = data[data.symbol == symbol]
-            
-            df = data[data.symbol == symbol]
+        for symbol in list(symbols):
+            df = data[data.symbol == symbol].copy()
             temp["data"] = df
             temp["long"], temp["short"] = self.split_lS(df)
-            
             asset_data[symbol] = temp
-            
+            temp = {}
         return asset_data
     
     
     def split_lS(self, trade):
-        loc_long = np.where((trade["type_"] == "LONG") | ((trade["type_"] == None) & (trade["status"] == "close")))
-        loc_short = np.where((trade["type_"] == "SHORT") | ((trade["type_"] == None) & (trade["status"] == "close")))
+        loc_long = np.where((trade["side"] == "LONG") | ((trade["side"] == None) & (trade["status"] == "close")))
+        loc_short = np.where((trade["side"] == "SHORT") | ((trade["side"] == None) & (trade["status"] == "close")))
         
         trade_long = trade.iloc[loc_long]
         trade_short = trade.iloc[loc_short]
         
         return trade_long, trade_short
+    
+    
+    def split_metrics(self, metrics):
+        metrics_data = {}
+        symbols = metrics.symbol.unique()
+        for symbol in symbols:
+            df = metrics[metrics.symbol == symbol].copy()
+            metrics_data[symbol] = df
+        return metrics_data
     
     
     def add_features(self, trade):
@@ -66,14 +72,14 @@ class Preprocessing:
         
         return trade, portfolio_data
         
-        
+    
         
     def get_signal(self, trade):
         loc = np.where(trade['status'] == 'open')
-        entry_point = trade.iloc[loc][['type_', 'status', 'price']]
+        entry_point = trade.iloc[loc][['side', 'status', 'price']]
         
         loc = np.where(trade['status'] == 'close')
-        exit_point = trade.iloc[loc][['type_', 'status', 'price']]
+        exit_point = trade.iloc[loc][['side', 'status', 'price']]
         
         return entry_point, exit_point
     

@@ -22,7 +22,7 @@ class Ml:
         self.data = data.copy()
         
     def get_model(self, model_id):
-        return joblib.load(f'strategies/model/{model_id}.joblib')
+        return joblib.load(f'app/strategies/model/{model_id}.joblib')
     
     def run(self, bar, model_id = "model_1d"):
         

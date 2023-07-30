@@ -14,7 +14,7 @@ from .db.data import connect_db
 
 class Simulation:
     
-    def __init__(self, symbols, capital, interval = "1d", start = "2023", end = "2023"):
+    def __init__(self, symbols, capital, interval = "1d", start = "2023", end = "2023", db_trades = "simulation_"):
         self.symbols = symbols
         self.interval = interval
         self.start = start
@@ -25,10 +25,10 @@ class Simulation:
         
         self.portfolio = Portfolio("W", capital)
         
-        self.journal = Journal()
+        self.journal = Journal(db_trades = db_trades)
         
         self.signal = Signal()
-        self.report = Report(start = start, end = end)
+        self.report = Report(start = start, end = end, db_trades = db_trades)
         self.manager = Manager(self.portfolio)
         
         
@@ -44,9 +44,9 @@ class Simulation:
         self.signal.update_df(data, symbol)
         
         i = -1
-        side = self.signal.get_signal(i)
+        #side = self.signal.get_signal(i)
         model = f"model_{symbol}"
-        #side = self.signal.get_ml_signal(bar = i , model = model)
+        side = self.signal.get_ml_signal(bar = i , model = model)
         
         date, price = data.index[i], data.close.iloc[i]
         signals = (date, price, side)
@@ -72,7 +72,7 @@ class Simulation:
         
         leverage = 1
         
-        amount = value_to_risk_p
+        amount = value_to_risk_p * 0.3
         quantity = amount / signal[1]
         
         check = self.manager.check_balance(amount)
@@ -82,6 +82,7 @@ class Simulation:
         asset = order['asset']
         asset.leverage = leverage
         
+        self.journal.set_date(date)
         if order['status'] == "LONG" or order['status'] == "SHORT":
             self.portfolio.set_type(asset)
             self.portfolio.rebalance(amount = amount)
@@ -120,9 +121,9 @@ class Simulation:
             data = self.journal.data
             portfolio_data = self.journal.portfolio_data
             
-            #self.report.run(data, portfolio_data)
+            self.report.run(data, portfolio_data)
             
-            self.report.run()
+            #self.report.run()
             display(data)
             
             if bar == self.n:

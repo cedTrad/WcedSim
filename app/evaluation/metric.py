@@ -9,33 +9,36 @@ pd.options.display.float_format = '{:.2f}'.format
     
 class Metric:
     
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, assets_data):
+        self.assets_data = assets_data
         self.n_trades = 0
-        self.symbols = list(data.keys())
+        self.symbols = list(assets_data.keys())
         self.df = pd.DataFrame(index = ["total_pnl", "expentancy", "win_rate", "loss_rate",
-                                        "amoung_win", "amoung_loss", "avg_win", "avg_loss"]
+                                        "amoung_win", "amoung_loss", "avg_win", "avg_loss",
+                                        "profit_factor"]
                                )
         self.portfolio_df = pd.DataFrame(index = ["total_pnl", "expentancy", "amoung_win", "amoung_loss",
-                                                  "avg_win", "avg_loss"])
+                                                  "avg_win", "avg_loss", "profit_factor"])
         self.df_st = pd.DataFrame()
-        
-        self.add_st = {"total_pnl": 0, "expentancy" : 0, "win_rate" : 0, "loss_rate" : 0,
-                    "amoung_win" : 0, "amoung_loss" : 0, "avg_win" : 0, "avg_loss" : 0,
-                    "symbol" : ""}
+        self.add_st = {}
     
     
-    def add_stats(self, symbol):
-        self.add_st["symbol"] = symbol
-        self.add_st["n_trades"] = self.n_trades
-        self.add_st["total_pnl"] = self.total_pnl
-        self.add_st["expentancy"] = self.expectancy
-        self.add_st["win_rate"] = self.win_rate
-        self.add_st["loss_rate"] = self.loss_rate
-        self.add_st["amoung_win"] = self.amoung_win
-        self.add_st["amoung_loss"] = self.amoung_loss
-        self.add_st["avg_win"] = self.avg_win
-        self.add_st["avg_loss"] = self.avg_loss
+    def get_stats(self, symbol):
+        add_st = {}
+        add_st["date"] = self.date
+        add_st["symbol"] = symbol
+        add_st["n_trades"] = self.n_trades
+        add_st["total_pnl"] = self.total_pnl
+        add_st["expentancy"] = self.exp
+        add_st["win_rate"] = self.win_rate
+        add_st["loss_rate"] = self.loss_rate
+        add_st["amoung_win"] = self.amoung_win
+        add_st["amoung_loss"] = self.amoung_loss
+        add_st["avg_gp"] = self.avg_gp
+        add_st["avg_win"] = self.avg_win
+        add_st["avg_loss"] = self.avg_loss
+        add_st["profit_factor"] = self.profit_factor
+        return add_st
     
     
     
@@ -53,16 +56,10 @@ class Metric:
     
     
     def expectancy(self, win_rate, avg_win, avg_loss):
-        return win_rate*avg_win + (1 - win_rate)*avg_loss
-
-    
-    def profit_factor(self):
-        return
-    
+        return win_rate*avg_win + (1 - win_rate)*avg_loss    
     
     def sharpe_ratio(self):
         return
-    
     
     def positions(self, r):
         pos = {"min" : 0, "25%" : 0, "median" : 0, "75%" : 0, "max" : 0}
@@ -90,6 +87,10 @@ class Metric:
     
     
     def stats(self, data):
+        try:
+            self.date = str(data.index[-1])
+        except IndexError:
+            self.date = None
         loc = np.where((data.status == "close"))
         self.n_trades = len(loc[0])
         loc = np.where((data.status == "close") & (data.pnl > 0))
@@ -114,6 +115,7 @@ class Metric:
         data_ = data.iloc[loc]
         self.avg_win = data_.loc[data_.gp > 0, "gp" ].mean()
         self.avg_loss = data_.loc[data_.gp <= 0, "gp" ].mean()
+        self.profit_factor = self.amoung_win / abs(self.amoung_loss)
         
         
         
@@ -124,15 +126,26 @@ class Metric:
         self.exp = self.expectancy(win_rate = self.win_rate,
                                    avg_win = self.avg_win,
                                    avg_loss = self.avg_loss)
-        
         col = [self.total_pnl, self.exp, self.win_rate, self.loss_rate,
-               self.amoung_win, self.amoung_loss, self.avg_win, self.avg_loss]
+               self.amoung_win, self.amoung_loss, self.avg_win, self.avg_loss,
+               self.profit_factor]
         self.df[symbol] = col
-        self.add_stats(symbol)
+        add = self.get_stats(symbol)
+        return add
         
         
     def run(self):
+        dd = {}
         for symbol in self.symbols:
-            data = self.data[symbol]["data"]
-            self.kpi(symbol, data)
+            temp = {}
+            data = self.assets_data[symbol]["data"].copy()
+            data_long = self.assets_data[symbol]["long"].copy()
+            data_short = self.assets_data[symbol]["short"].copy()
             
+            temp["data"] = self.kpi(symbol, data)
+            temp["long"] = self.kpi(symbol, data_long)
+            temp["short"] = self.kpi(symbol, data_short)
+            
+            dd[symbol] = temp
+            
+        return dd

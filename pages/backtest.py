@@ -24,13 +24,13 @@ st.set_page_config(page_title="Trading System",
 
 class StApp(Simulation):
     
-    def __init__(self, symbols, capital, interval = "1d", start="2023", end="2023"):
+    def __init__(self, symbols, capital, interval = "1d", start="2023", end="2023", db_trades = "simulation_"):
         Simulation.__init__(self, symbols = symbols, capital = capital,
-                     interval = interval, start = start, end = end)
+                     interval = interval, start = start, end = end, db_trades = db_trades)
     
     def run(self):
         
-        self.portfolio.config(m = 3.5, floor = 0.7)
+        self.portfolio.config(m = 3.5, floor = 0)
         self.set_assets()
         
         bar = 1
@@ -56,7 +56,7 @@ class StApp(Simulation):
                 col1, col2 = st.columns([2, 1])
                 with col1:
                     st.dataframe(data.drop(columns=["date", "position", "out_value"]).iloc[-len(self.symbols):])
-                    st.dataframe(self.report.metrics.df.T)
+    
                 with col2:
                     st.dataframe(portfolio_data.drop(columns=["date"]).iloc[-1])
                     
@@ -71,25 +71,17 @@ class StApp(Simulation):
                     st.plotly_chart(fig, True)
                 
                 fig = self.report.plot_portfolio()
-                st.plotly_chart(fig)
+                st.plotly_chart(fig, True)
                 
             if bar == self.n:
                 break
 
    
-def sidebar():
-    with st.sidebar:
-        st.radio("Menu", ["Performance", "Analytics"])
-        st.selectbox(" Select Simulation", [f"simulation_{i}" for i in range(5)])
-        
-sidebar()
-
+simulation_select = st.sidebar.selectbox(" Select Simulation", [f"simulation_{i}" for i in range(1, 10)])
 
 SYMBOLS = ['BTC', 'ETH', 'DASH']
         
 st.title("Simulation")
-
-side = st.sidebar
 
 
 selected = option_menu(
@@ -102,7 +94,9 @@ selected = option_menu(
 if selected == "Run":
     st.title("Simulation")
     with st.form("config"):
-        
+        simulation = st.text_input("simulation-desciption", "simulation")
+        n_sim = st.text_input("numero")
+        simulation_name = simulation+"_"+n_sim
         col1, col2, col3 = st.columns(3)
         with col1:
             symbols = st.multiselect("choose cryptocurrency ", tuple(assets), key="symbols")
@@ -120,7 +114,7 @@ if selected == "Run":
         run_button = st.form_submit_button("Run")
     if run_button:
         app = StApp(symbols = symbols, capital = capital,
-                    start = str(start), end = str(end), interval = "1d")
+                    start = str(start), end = str(end), interval = "1d", db_trades = simulation_name)
         app.run()
 
 
@@ -128,26 +122,14 @@ if selected == "Run":
 
 if selected == "View":
     st.title("Analytics")
-    report = Report()
-    report.run()
-    indicateur = report.metrics.df.T
     
+    report = Report(db_trades = simulation_select)
+    report.run()
+    #indicateur = report.metrics.df.T    
     tab_1, tab_2, tab_3, tab_4, tab_5 = st.tabs(["Global", "Portfolio", "Asset", "PnL Analysis", "Risk"])
     tab_1.subheader("Global Overviews")
-    tab_1.table(indicateur.applymap(lambda x : "{:.{}f}".format(x, 2)))
+    #tab_1.table(indicateur.applymap(lambda x : "{:.{}f}".format(x, 2)))
     
-    ind = pd.DataFrame({"indicator": [30, 70],
-                        "indicator_2": [30, 70]}, index = ["win", "loss"])
-    
-    tab_1.data_editor(
-        #indicateur[["win_rate", "loss_rate"]],
-        ind,
-        column_config={
-            "indicator": st.column_config.ProgressColumn(
-                "Rate Return", help="Win Rate", format="%f", min_value=0, max_value=100,
-                ),
-        }, hide_index=False,
-    )
     
     tab_1_1, tab_1_2 = tab_1.tabs(["Views", "distribution"])
     select_view = tab_1_1.selectbox("view", ("pnl", "gp", "cum_gp", "value"))
@@ -167,14 +149,28 @@ if selected == "View":
 
     tab_4.subheader("PnL Analysis")
     symbol_pnl = tab_3.selectbox("choose cryptocurrency ", tuple(report.symbols), key="symbol_pnl")
-    report.pnl.run(symbol_pnl)
-    tab_4.dataframe(report.pnl.df.T)
     
-    tab_4.plotly_chart(report.pnl.viz_distribution())
+    with tab_4:
+        col1, col2 = st.columns(2)
+        with col1:
+            fig = report.pnl.viz_distribution(symbol_pnl)
+            st.plotly_chart(fig, True)
+        with col2:
+            fig = report.pnl.viz_distribution(symbol_pnl)
+            st.plotly_chart(fig, True)
+        #metrics = tab_4.selectbox("choose metrics", ["total_pnl", "expentancy", "profit_factor"])
+        metrics = tab_4.multiselect("choose metrics", ["avg_gp" ,"total_pnl", "expentancy", "profit_factor", "win_rate", "loss_rate"])
+        fig = report.pnl.plot_metric(symbol_pnl, metrics)
+        st.plotly_chart(fig, True)
+        
+        
+            
+        
     
     tab_5.subheader("Risk Analysis")
+    tab_5.plotly_chart(report.plot_cppi())
     
-#streamlit run c:/Users/cc/Desktop/WcedSyst/backtest.py
+# streamlit run c:/Users/cc/Desktop/WcedSyst/backtest.py
 
 
 

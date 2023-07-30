@@ -12,7 +12,7 @@ class Trades(Base):
     price = Column(Float)
     quantity = Column(Float)
     position = Column(Float)
-    type_ = Column(String)
+    side = Column(String)
     status = Column(String)
     in_value = Column(Float)
     out_value = Column(Float)
@@ -27,7 +27,7 @@ class Trades(Base):
         self.price = add['price']
         self.quantity = add['quantity']
         self.position = add['position']
-        self.type_ = add['type']
+        self.side = add['side']
         self.status = add['status']
         self.in_value = add['in_value']
         self.out_value = add['out_value']
@@ -52,7 +52,7 @@ class Portfolio_tab(Base):
     floor_value = Column(Float)
     cushion = Column(Float)
     m = Column(Integer)
-    risk_w = Column(Float)
+    risky_w = Column(Float)
     
     margin = Column(Integer)
     risk_value = Column(Float)
@@ -70,3 +70,39 @@ class Portfolio_tab(Base):
         self.floor_value = add['floor_value']
         self.cushion = add['cushion']
         self.risky_w = add['risky_w']
+        
+
+
+
+class Metrics(Base):
+    __tablename__ = "metrics"
+    key = Column(String, primary_key = True)
+    date = Column(String)
+    symbol = Column(String)
+    total_pnl = Column(Float)
+    expentancy = Column(Float)
+    win_rate  = Column(Float)
+    loss_rate = Column(Float)
+    amoung_win  = Column(Float)
+    amoung_loss = Column(Float)
+    avg_gp = Column(Float)
+    avg_win = Column(Float)
+    avg_loss = Column(Float)
+    profit_factor = Column(Float)
+    
+    def __init__(self, add):
+        self.key = add["key"]
+        self.date = add["date"]
+        self.symbol = add["symbol"]
+        self.total_pnl = add["total_pnl"]
+        self.expentancy = add["expentancy"]
+        self.win_rate = add["win_rate"]
+        self.loss_rate = add["loss_rate"]
+        self.amoung_win = add["amoung_win"]
+        self.amoung_loss = add["amoung_loss"]
+        self.avg_gp = add["avg_gp"]
+        self.avg_win = add["avg_win"]
+        self.avg_loss = add["avg_loss"]
+        self.profit_factor = add["profit_factor"]
+
+

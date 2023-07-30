@@ -3,7 +3,7 @@ import pandas as pd
 
 from .risk.risk_management import RiskManagement
 
-from .utils import *
+from utils import assets
 
 
 class Asset:
@@ -23,68 +23,49 @@ class Asset:
         self.status = ""
         
     
-    def update_quantity(self, quantity):
-        self.quantity += quantity
-    
-    
     def set_leverage(self, leverage):
         self.leverage = leverage
     
     
-    def update_value(self, price):
-        self.value = self.get_value(price)
-        self.get_pnl_pct()
-        self.status = "-"
-        self.out_value = 0
-        
-        
-    def update(self, quantity, price, position, close = False):        
-        self.quantity += quantity
-        self.position = position
-        if close:
-            self.value = self.get_value(price)
-            self.status = "close"
-            self.pnl = (self.out_value - self.in_value) * self.leverage
-            #self.in_value = 0
-        else:
-            self.in_value = abs(self.quantity * price)
-            self.value = self.get_value(price)
-            self.status = "open"
-            self.out_value = 0
-        self.get_pnl_pct()        
-        
-        
-    def get_out_value(self, price):
-        self.update_value(price)
-        self.out_value = self.value
-    
     def pnl_value(self, price):
-        pnl = 0
-        self.pnl = 0
-        if self.type == "LONG":
-            pnl = (self.quantity * price - self.in_value)
-        elif self.type == "SHORT":
-            pnl = (self.in_value - abs(self.quantity) * price)
+        self.pnl = (self.quantity * price - self.in_value)
+        if self.type == "SHORT":
+            self.pnl = (self.in_value - abs(self.quantity) * price)
             if self.quantity == 0:
-                pnl = -self.in_value
-        elif self.type == "None":
-            pnl = 0
-            
-        self.pnl = pnl
-        return pnl * self.leverage
-
-
-    def get_pnl_pct(self):
-        if self.in_value != 0:
-            self.pnl_pct = (self.pnl / self.in_value)
-        else:
-            self.pnl_pct = 0
+                self.pnl = -self.in_value
     
     
     def get_value(self, price):
-        self.pnl = self.pnl_value(price)
-        value = self.in_value + self.pnl_value(price)
+        self.pnl_value(price)
+        value = self.in_value + self.pnl * self.leverage
         return value
+        
+        
+    def update(self, price, quantity = 0, status = "-"):   
+        if status == "open":
+            self.quantity += quantity
+            self.in_value = abs(self.quantity * price)
+            self.value = self.get_value(price)
+            self.status = status
+            self.out_value = 0
+        
+        elif status == "close":
+            self.out_value = abs(self.quantity * price)
+            self.quantity += quantity
+            self.value = self.get_value(price)
+            self.pnl = self.out_value - self.in_value
+            self.pnl_pct = (self.pnl / self.in_value)
+            self.status = status
+            self.in_value = 0
+        
+        else:
+            self.status = status
+            self.value = self.get_value(price)
+            self.out_value = 0
+            try:
+                self.pnl_pct = (self.pnl / self.in_value)
+            except:
+                self.pnl_pct = 0
 
 
 
@@ -156,8 +137,10 @@ class Portfolio:
         elif asset.type == "LONG":
             self.assets_long[symbol] = asset
     
+    
     def config(self, m, floor):
         self.risk.config_cppi(m=m, floor=floor)
+    
     
     def management(self):
         self.risk.run(self.capital)

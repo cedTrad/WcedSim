@@ -22,5 +22,9 @@ class Manager:
         else:
             return 100        # ok 
     
+    def stop(self):
+        if self.portfolio.capital < 10:
+            return stop
+        
     
         

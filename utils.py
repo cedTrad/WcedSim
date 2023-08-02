@@ -1,19 +1,35 @@
+import requests
+import hmac
+import hashlib
+from urllib.parse import urljoin, urlencode
+import time
 import datetime
+from configparser import ConfigParser
+
+import streamlit as st
 
 
-assets = ['USDT', 'BTC', 'ETH', 'EGLD', 'QNT', 'BNB', 'KSM', 'XMR', 'AAVE']
+
+@st.cache_data(ttl=60*5)
+def serverGap():
+    path = "/fapi/v1/time"
+    URL = "https://testnet.binancefuture.com"
+    url = urljoin(URL, path)
+    server_time = requests.get(url)
+    gap = (server_time.json()['serverTime'] - time.time()*1000)/1000
+    return gap
 
 
-Assets = ['USDT', 'BTC', 'ETH', 'SOL', 'EGLD', 'VET', 'GALA', 'QNT', 'TWT', 'BNB', 'KSM',
-          'XMR', 'MATIC', 'DOT', 'SHIB', 'AAVE', 'FET', 'OCEAN', 'SC', 'CELR',
-          'LINK', 'XRP', 'ADA', 'LTC', 'AVAX', 'ATOM', 'FIL', 'NEAR', 'ICP', 'ALGO',
-          'FTM', 'THETA', 'CHZ', 'NEO', 'DASH', 'SNX', 'KAVA', 'DOGE', 'SAND',
-          'CRV', 'ZIL', 'CELO', 'BAT', 'XLM', 'DODO', 'IOTA', 'APT', 'TROY', 'REN', 'IDEX',
-          'YFI', 'EOS', 'LUNC', 'CFX', 'OP', 'LDO', 'PAXG', 'TRX', 'ILV', 'CAKE',
-          'DEXE', 'ETC', 'LIT', 'APE', 'LTO', 'HOT', 'AXS', 'COMP', 'LUNA',
-          'CFX', 'IMX', 'WOO', 'MINA', 'PEPE', 'ARB', 'MANA']
+def info():
+    path = "/fapi/v1/exchangeInfo"
+    URL = "https://testnet.binancefuture.com"
+    url = urljoin(URL, path)
+    info = requests.get(url)
+    return info.json()
 
 
+
+    
 def convert(data):
     for x, y in zip(data.keys(), data.values()):
         data[x] = round(float(y), 2)

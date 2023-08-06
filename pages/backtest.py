@@ -94,9 +94,7 @@ selected = option_menu(
 if selected == "Run":
     st.title("Simulation")
     with st.form("config"):
-        simulation = st.text_input("simulation-desciption", "simulation")
-        n_sim = st.text_input("numero")
-        simulation_name = simulation+"_"+n_sim
+        simulation_name = st.text_input("simulation-desciption", "simulation_")
         col1, col2, col3 = st.columns(3)
         with col1:
             symbols = st.multiselect("choose cryptocurrency ", tuple(assets), key="symbols")

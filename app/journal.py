@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import uuid
 
-from .db.base import Base, Base_metrics
+from .db.base import Base
 from .db.table import Trades, Portfolio_tab, Metrics
 
 

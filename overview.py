@@ -44,7 +44,11 @@ st.data_editor(
     hide_index=True,
 )
 
-# streamlit run c:/Users/cc/Desktop/WcedSyst/overview.py
+
+# streamlit run c:/Users/cc/Desktop/CedAlgo/WcedSim/overview.py
+
+
+
 
 
 

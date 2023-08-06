@@ -44,9 +44,9 @@ class Simulation:
         self.signal.update_df(data, symbol)
         
         i = -1
-        #side = self.signal.get_signal(i)
+        side = self.signal.get_signal(i)
         model = f"model_{symbol}"
-        side = self.signal.get_ml_signal(bar = i , model = model)
+        #side = self.signal.get_ml_signal(bar = i , model = model)
         
         date, price = data.index[i], data.close.iloc[i]
         signals = (date, price, side)

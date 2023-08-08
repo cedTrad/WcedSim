@@ -36,10 +36,10 @@ class TMM:
     def run(self, bar):
         self.preprocess()
         
-        if self.data["m1"].iloc[bar] > self.data["m2"].iloc[bar] > self.data["m3"].iloc[bar]:
-            return "SHORT"
-        elif self.data["m1"].iloc[bar] < self.data["m2"].iloc[bar] < self.data["m3"].iloc[bar]:
+        if self.data["m1"].iloc[bar] < self.data["m2"].iloc[bar] < self.data["m3"].iloc[bar]:
             return "LONG"
+        #elif self.data["m1"].iloc[bar] > self.data["m2"].iloc[bar] > self.data["m3"].iloc[bar]:
+        #    return "SHORT"
         #elif self.data["rsi"].iloc[bar] > 80:
         #    return "SHORT"
         else:

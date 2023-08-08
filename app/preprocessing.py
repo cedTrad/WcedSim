@@ -41,6 +41,11 @@ class Preprocessing:
         return metrics_data
     
     
+    def recovery_per_trade(self, trade):
+        trade["loss"] = np.where(trade["pnl_pct"] <= 0, trade["pnl_pct"], 0)
+        trade["recovery"] = (1 / (1 + trade["loss"])) - 1
+    
+    
     def add_features(self, trade):
         trade['gp'] = np.where((trade['status'] == 'open') | ((trade['position'] == 0) & (trade['status'] != 'close')),
                                0, trade.pnl.diff())
@@ -68,7 +73,11 @@ class Preprocessing:
         portfolio_data.set_index('date', inplace = True)
         portfolio_data = portfolio_data.groupby('date').last().copy()
         portfolio_data["rets"] = portfolio_data["capital"].pct_change()
+        portfolio_data["gp"] = portfolio_data["capital"].diff()
         portfolio_data["cum_rets"] = (portfolio_data["rets"] + 1).cumprod()
+        portfolio_data["cum_gp"] = portfolio_data["gp"].cumsum()
+        portfolio_data["cummax"] = portfolio_data["cum_rets"].cummax()
+        portfolio_data["drawdown"] = portfolio_data["cum_rets"] - portfolio_data["cummax"]
         
         return trade, portfolio_data
         

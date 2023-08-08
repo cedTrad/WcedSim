@@ -40,16 +40,12 @@ class Report:
             self.portfolio_data = pd.read_sql('portfolio_tab', self.engine)
         else:
             self.portfolio_data = portfolio_data
-        
-        #if metrics_data is None:
-        #   self.metrics_data = pd.read_sql('metrics', self.engine2)
-        #else:
-        #    self.metrics_data = metrics_data
             
         self.symbols = list(self.data.symbol.unique())
         self.data, self.portfolio_data = self.preprocessing.pre_preprocess(trade = self.data, portfolio_data = self.portfolio_data)
         self.assets_data = self.preprocessing.split_asset(self.data)
         self.pnl.get_trades(assets_data = self.assets_data)
+        self.p_evalutation = PEvalutation(self.portfolio_data)
     
 
     def run(self, data = None, portfolio_data = None):
@@ -60,6 +56,7 @@ class Report:
         for symbol in self.symbols:
             df = self.assets_data[symbol]
             self.preprocessing.add_features(df["data"])
+            self.preprocessing.recovery_per_trade(df["data"])
             self.preprocessing.add_features(df["long"])
             self.preprocessing.add_features(df["short"])
         self.pnl.run()
@@ -73,7 +70,6 @@ class Report:
     
     def viz_asset(self, data, asset, portfolio):
         entry_point , exit_point = self.preprocessing.get_signal(asset)
-        
         fig = subplots(nb_rows=3, nb_cols=1, row_heights=[0.2, 0.6, 0.2])
         
         add_line(fig=fig, col=1, row=1, data=asset, feature='rets', name='return')
@@ -90,21 +86,30 @@ class Report:
         return fig
     
     
-    def viz_portfolio(self, portfolio):
-        #fig = subplots2(nb_rows=3, nb_cols=1, row_heights=[0.15, 0.7, 0.15])
-        fig = subplots(nb_rows=3, nb_cols=1, row_heights=[0.15, 0.7, 0.15])
+    def viz_portfolio(self, portfolio,  pct = True):
+        fig = subplots2(nb_rows=2, nb_cols=1, row_heights=[0.2, 0.8])
         
-        add_line(fig = fig, col=1, row=1, data=portfolio, feature='cum_rets', name='cum_rets', color = "blue")
+        add_line(fig = fig, col=1, row=1, data=portfolio, feature='cum_gp', name='cum_gp', color = "blue")
         
         add_line(fig = fig, col=1, row=2, data=portfolio, feature='capital', name='capital', color = "blue")
         add_bar(fig = fig, col=1, row=2, data=portfolio, feature='available_value', name='available_value', color = "green")
         add_bar(fig = fig, col=1, row=2, data=portfolio, feature='risk_value', name='risk_value', color = "red")
+        add_hline(fig = fig, col=1, row=2, data=portfolio, feature='floor_value', color = "white")
         
-        colors = np.where(portfolio["rets"]>0, "green", "red")
-        add_bar(fig = fig, col=1, row=3, data=portfolio, feature='rets', name='return', color = colors)
-        add_line(fig = fig, col=1, row=3, data=portfolio, feature='rets', name='return', color = colors)
-        
+        #colors = np.where(portfolio["rets"]>0, "green", "red")
+        #add_bar(fig = fig, col=1, row=3, data=portfolio, feature='rets', name='return', color = colors)
+        #add_line(fig = fig, col=1, row=3, data=portfolio, feature='rets', name='return', color = colors)
         return fig
+    
+    
+    def viz_portfolio_dist(self, pct = True):
+        fig = go.Figure()
+        if not pct:
+            add_hist(fig=fig, data=self.portfolio_data, feature="gp", name = "gp" )
+        else:
+            add_hist(fig=fig, data=self.portfolio_data, feature="rets", name = "returns" )
+        return fig
+        #n=
     
     
     def plot_asset(self, symbol):
@@ -116,11 +121,15 @@ class Report:
         data = data.loc[start : end]
         
         fig = self.viz_asset(data, self.assets_data[f'{asset}']["data"], self.portfolio_data)
-        fig.update_layout(height = 1000 , width =1500)
+        fig.update_layout(height = 1000 , width =1500,
+                          legend = dict(orientation="h",
+                                        yanchor="bottom", y=1,
+                                        xanchor="right", x=0.5),
+                          margin = {'t':0, 'b':0, 'l':10, 'r':0}
+                          )
         return fig
         
-    
-        
+           
     def plot(self, feature, bar = False):
         
         portfolio = self.portfolio_data
@@ -141,18 +150,27 @@ class Report:
                 
         add_line(fig = fig, col=1, row=rows+1, data=portfolio, feature='capital', name='capital')
         fig.update_layout(height = 500 , width = 1000,
-                          margin = {'t':0, 'b':0, 'l':0})
+                          legend = dict(orientation="h",
+                                        yanchor="bottom", y=1,
+                                        xanchor="right", x=0.5),
+                          margin = {'t':0, 'b':0, 'l':10, 'r':0}
+                          )
         
         return fig
     
     
     def plot_portfolio(self):
         fig = self.viz_portfolio(self.portfolio_data)
-        fig.update_layout(height = 600 , width = 1400,
-                          barmode='stack',
-                          margin = {'t':0, 'b':0, 'l':0}
+        fig.update_layout(height = 600 , width = 1200,
+                          barmode = 'stack',
+                          legend = dict(orientation="h",
+                                        yanchor="bottom", y=1,
+                                        xanchor="right", x=0.5),
+                          modebar_remove=['zoom', 'pan'],
+                          margin = {'t':0, 'b':0, 'l':10, 'r':0}
                           )
         return fig
+        #n=
         
     def plot_cppi(self):
         fig = subplots2(nb_rows=2, nb_cols=1, row_heights=[0.7, 0.3])
@@ -162,7 +180,10 @@ class Report:
         add_line(fig = fig, col=1, row=2, data = self.portfolio_data, feature='risky_w', name='risk_w', color = "blue")
         
         fig.update_layout(height = 600 , width = 1000,
-                          margin = {'t':0, 'b':0, 'l':0}
+                          legend = dict(orientation="h",
+                                        yanchor="bottom", y=1,
+                                        xanchor="right", x=0.5),
+                          margin = {'t':0, 'b':0, 'l':10, 'r':0}
                           )
         return fig
     
@@ -171,7 +192,40 @@ class Report:
         fig = go.Figure()
         add_line(fig = fig, col=None, row=None, data=data, feature=feature, name=feature, color="blue")
         fig.update_layout(height = 600 , width = 1000,
-                          margin = {'t':0, 'b':0, 'l':0}
+                          legend = dict(orientation="h",
+                                        yanchor="bottom", y=1,
+                                        xanchor="right", x=0.5),
+                          margin = {'t':0, 'b':0, 'l':10, 'r':0}
                           )
         return fig
+    
+
+#n=
+class PEvalutation:
+    
+    def __init__(self, portfolio_data):
+        self.portfolio_data = portfolio_data
+    
+    def recovery_curve(self):
+        fig = go.Figure()
+    
+    def plot(self):
+        #fig = go.Figure()
+        fig = subplots2(nb_rows=2, nb_cols=1, row_heights=[0.7, 0.3])
+        
+        add_line(fig, col=1, row=1, data=self.portfolio_data, feature="cum_rets", name="cum_rets")
+        add_line(fig, col=1, row=1, data=self.portfolio_data, feature="cummax", name="cummax")
+        
+        add_area(fig, col=1, row=2, data=self.portfolio_data, feature="drawdown", name="drawdown", color = "red")
+        fig.update_layout(height = 300 , width = 1200,
+                          barmode='stack',
+                          legend = dict(orientation="h",
+                                        yanchor="bottom", y=1,
+                                        xanchor="right", x=0.5),
+                          margin = {'t':0, 'b':0, 'l':10, 'r':0}
+                          )
+        return fig
+        
+    
+    
         

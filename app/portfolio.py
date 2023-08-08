@@ -46,6 +46,7 @@ class Asset:
             self.quantity += quantity
             self.in_value = abs(self.quantity * price)
             self.value = self.get_value(price)
+            self.pnl_pct = (self.pnl / self.in_value)
             self.status = status
             self.out_value = 0
         
@@ -76,6 +77,7 @@ class Portfolio:
     def __init__(self, name, capital):
         self.name = name
         self.capital = capital
+        self.init_capital = capital
         
         self.assets = {}
         self.assets_long = {}

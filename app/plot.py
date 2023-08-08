@@ -5,51 +5,6 @@ from plotly.subplots import make_subplots
 import numpy as np
 import pandas as pd
 
-def line(x, y, color, name):
-    fig = go.Scatter(
-        x = x, y = y,
-        name = name,
-        line = dict(color = color, width = 1),
-        yaxis='y1'
-    )
-    return fig
-
-
-def mark(x, y, color, name):
-    fig = go.Scatter(
-        x = x, y = y,
-        name = name,
-         mode = "markers",
-        line = dict(color = color, width = 1),
-        yaxis='y1'
-    )
-    return fig
-    
-    
-def candle(data, name):
-    fig = go.Candlestick(
-            x = data.index , open = data.open, close = data.close,
-            high = data.high, low = data.low,
-            yaxis='y1'
-        )
-    return fig
-
-
-def second_y(x, y, name, color):
-    fig = go.Scatter(
-        x = x, y = y,
-        name = name,
-        line = dict(color = color, width = 1),
-        yaxis='y2'
-    )
-    return fig
-
-
-
-
-
-
-#  -----------------------------------------------------------------------
 
 # make subplot
 def subplots(nb_rows , nb_cols, row_heights = None, column_widths = None, vertical_spacing=0.01, horizontal_spacing = 0.02):
@@ -118,8 +73,30 @@ def add_bar(fig, col, row, data, feature, name, color = None):
     )
     
 
-def add_hline(fig, y, col, row, color):
-    fig.add_hline(y = y , col = col, row = row, line_color = color)
+def add_hline(fig, data, feature, col, row, color):
+    fig.add_hline(y = data[feature].iloc[-1] , col = col, row = row, line_color = color)
+
+
+def add_area(fig, data, color, feature, name, col = None , row = None):
+    fig.add_trace(
+        go.Scatter(
+            x = data.index , y = data[feature],
+            fill = "tozeroy",
+            marker_color = color,
+            name = name
+        ),
+        col = col , row = row
+    )
+    
+    
+def add_hist(fig, data, feature, name, col = None , row = None):
+    fig.add_trace(
+        go.Histogram(
+            x = data[feature], histnorm = "probability", name = name
+        ),
+        col = col , row = row
+    )
+
 
 
 def add_second_y(fig, col, row, data, name = 'position'):
@@ -145,18 +122,6 @@ def signal_point(fig, col, row, x, y, name, marker, size = 10):
             marker_symbol = marker[0],
             marker_size = marker[1],
             marker_color = marker[2],
-            name = name
-        ),
-        col = col , row = row
-    )
-
-
-def area(fig, x, y, color, name, col = None , row = None):
-    fig.add_trace(
-        go.Scatter(
-            x = x, y = y,
-            fill = "tozeroy",
-            marker_color = color,
             name = name
         ),
         col = col , row = row

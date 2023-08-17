@@ -24,22 +24,42 @@ st.set_page_config(page_title="Trading System",
 
 st.title("Analytics")
 
+file = st.sidebar.file_uploader("simulation")
+
 simulation_select = st.sidebar.selectbox(" Select Simulation", [f"simulation_{i}" for i in range(1, 10)])
 st.sidebar.title("Description")
-
-file = st.file_uploader("simulation")
-
 
 report = Report(db_trades = simulation_select)
 report.run()
 
 
 
-#indicateur = report.metrics.df.T    
+#indicateur = report.metrics.df.T 
+
+symbols = report.symbols
+
+st.table(symbols)
+   
 tab_1, tab_2, tab_3, tab_4, tab_5 = st.tabs(["Global", "Portfolio", "Asset", "PnL Analysis", "Risk"])
+
 tab_1.subheader("Global Overviews")
-#tab_1.table(indicateur.applymap(lambda x : "{:.{}f}".format(x, 2)))
+with tab_1:
+    symbols = report.symbols
+    cols = st.columns(4)
+    with cols[0]:
+        p_data = report.portfolio_data
+        capital = p_data.iloc[0]["capital"]
+        st.metric("Balance", capital, delta=(p_data.iloc[-1]["capital"] - p_data.iloc[0]["capital"]))
     
+    with cols[1]:
+        st.metric("Drawdown", 10)
+        
+    with cols[2]:
+        st.metric("Long", 5)
+        
+    with cols[3]:
+        st.metric("Short", 1)
+
 tab_1_1, tab_1_2 = tab_1.tabs(["Views", "distribution"])
 select_view = tab_1_1.selectbox("view", ("pnl", "gp", "cum_gp", "value"))
 fig = report.plot(select_view)

@@ -44,9 +44,9 @@ class Simulation:
         self.signal.update_df(data, symbol)
         
         i = -1
-        #side = self.signal.get_signal(i)
+        side = self.signal.get_signal(i)
         model = f"model_{symbol}"
-        side = self.signal.get_ml_signal(bar = i , model = model)
+        #side = self.signal.get_ml_signal(bar = i , model = model)
         
         date, price = data.index[i], data.close.iloc[i]
         signals = (date, price, side)
@@ -107,7 +107,6 @@ class Simulation:
         
     
     def run(self):
-        
         self.portfolio.config(m = 3, floor = 0)
         self.set_assets()
         bar = 1
@@ -124,10 +123,11 @@ class Simulation:
             self.report.run(data, portfolio_data)
             
             #self.report.run()
-            display(data)
-            
+            #display(data)
+            print(f"{bar} / {self.n}")
             if bar == self.n:
                 break
         
     
+
 

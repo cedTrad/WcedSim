@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 
 import streamlit as st 
 from streamlit_option_menu import option_menu
+import multiprocessing
 
 import datetime
 import pytz
@@ -106,17 +107,13 @@ def config(simulation):
 
 
 
-SYMBOLS = ['BTC', 'ETH', 'DASH']
-
 st.title("Simulation")
-
 selected = option_menu(
                     menu_title=None, 
                     options=["Run", "Run_Portfolio", "Reading"],
                     icons=["pencil-fill", "bar-chart-fill"],
                     orientation="horizontal"
                     )
-
 
 
 
@@ -134,7 +131,43 @@ if selected == "Run":
 
 
 
+class MApp(Simulation):
+    
+    def __init__(self, symbols, capital, interval = "1d", start="2023", end="2023", db_trades = "simulation_"):
+        Simulation.__init__(self, symbols = symbols, capital = capital,
+                     interval = interval, start = start, end = end, db_trades = db_trades)
+    
+    def run(self):
+        self.portfolio.config(m = 3, floor = 0)
+        self.set_assets()
+        
+        bar = 1
+        bar_p = 0
+        
+        placeholder = st.empty()
+        progress_bar = st.progress(0)
+        st.write(" --- ---- ---")
+        while True:
+            
+            self.apply(bar)
+            bar += 1
+            with placeholder.container():
+                bar_p = (self.n - bar)/self.n
+                progress_bar.progress(bar_p)
+                
+                data = self.journal.data
+                portfolio_data = self.journal.portfolio_data
+                
+                self.report.run(data, portfolio_data)
+                
+                st.write(f"{bar} / {self.n}")
+            if bar == self.n:
+                break
 
+
+def run_simulation(params):
+        app = MApp(**params)
+        app.run()
 
 if selected == "Run_Portfolio":
     st.write("Faire une simulation de plusieur portfolio")
@@ -155,16 +188,30 @@ if selected == "Run_Portfolio":
     with st.expander("Before simulation"):
         st.write(portfolios)
     
-    """
-    app = StApp(symbols = symbols, capital = capital,
-                    start = str(start), end = str(end),
-                    interval = "1d", db_trades = simulation_name
-                    )
-    app.run()
-    """
+    with st.form("Run"):
+        portfolio_params = [
+            {"symbols": ["ETH"], "capital": 100, "start": "2023-01", "end": "2023-04", "interval": "1d", "db_trades": "P1"},
+            {"symbols": ["XMR"], "capital": 100, "start": "2023-01", "end": "2023-04", "interval": "1d", "db_trades": "P2"},
+            {"symbols": ["BTC"], "capital": 100, "start": "2023-01", "end": "2023-04", "interval": "1d", "db_trades": "P3"},
+            {"symbols": ["GALA"], "capital": 100, "start": "2023-01", "end": "2023-04", "interval": "1d", "db_trades": "P4"},
+            {"symbols": ["EGLD"], "capital": 100, "start": "2023-01", "end": "2023-04", "interval": "1d", "db_trades": "P5"}
+        ]
+        st.write(portfolio_params)
+        run_button = st.form_submit_button("Run")
+    
+    if run_button:
+        processes = []
+        for params in portfolio_params:
+            p = multiprocessing.Process(target=run_simulation, args=(params,))
+            processes.append(p)
+            p.start()
+                
+        for p in processes:
+            p.join()
         
 
 #n=
+
 
 
 

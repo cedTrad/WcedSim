@@ -55,8 +55,8 @@ class OrderManagement:
         symbol = asset.symbol
         position = asset.position
         
-        if check == 100:
-            print("ok for order")
+        #if check == 100:
+            #print("ok for order")
         
         if position == 0 and decision == "LONG" and check == 100:
             order = self.open_long(asset, price, quantity)

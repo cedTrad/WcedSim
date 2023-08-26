@@ -8,6 +8,7 @@ from streamlit_option_menu import option_menu
 import datetime
 import pytz
 from sqlalchemy import create_engine
+import os
 
 from app.report import Report
 from app.simulation import Simulation
@@ -24,23 +25,31 @@ st.set_page_config(page_title="Trading System",
 
 st.title("Analytics")
 
-file = st.sidebar.file_uploader("simulation")
 
-simulation_select = st.sidebar.selectbox(" Select Simulation", [f"simulation_{i}" for i in range(1, 10)])
-st.sidebar.title("Description")
+path = os.getcwd() + "\\data"
+simulation_list = os.listdir(path)
 
-report = Report(db_trades = simulation_select)
-report.run()
+with st.expander("Description"):
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        simulation_select = option_menu(
+                                menu_title=None, 
+                                options=simulation_list,
+                                icons=["pencil-fill", "bar-chart-fill"],
+                                orientation="vertical"
+                                )
+        report = Report(db_trades = simulation_select)
+        report.run()
+        
+    with col2:
+        st.table(report.symbols)
 
-
-
-#indicateur = report.metrics.df.T 
 
 symbols = report.symbols
+#st.table(symbols)
 
-st.table(symbols)
-   
 tab_1, tab_2, tab_3, tab_4, tab_5 = st.tabs(["Global", "Portfolio", "Asset", "PnL Analysis", "Risk"])
+
 
 tab_1.subheader("Global Overviews")
 with tab_1:
@@ -83,6 +92,7 @@ with tab_2:
         st.write("ff")
 
 
+
 tab_3.subheader("Individal Views")
 symbol = tab_3.selectbox("choose cryptocurrency ", tuple(report.symbols), key="symbol")
 fig = report.plot_asset(symbol)
@@ -105,6 +115,7 @@ with tab_4:
     metrics = tab_4.multiselect("choose metrics", ["avg_gp" ,"total_pnl", "expentancy", "profit_factor", "win_rate", "loss_rate"])
     fig = report.pnl.plot_metric(symbol_pnl, metrics)
     st.plotly_chart(fig, True)
+        
         
         
     

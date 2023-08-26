@@ -47,6 +47,8 @@ class Preprocessing:
     
     
     def add_features(self, trade):
+        trade['ret_price'] = trade['price'].pct_change()
+        trade['price_cum'] = (trade['ret_price'] + 1).cumprod()
         trade['gp'] = np.where((trade['status'] == 'open') | ((trade['position'] == 0) & (trade['status'] != 'close')),
                                0, trade.pnl.diff())
         trade['rets'] = np.where((trade['status'] == 'open') | ((trade['position'] == 0) & (trade['status'] != 'close')),
@@ -85,10 +87,10 @@ class Preprocessing:
         
     def get_signal(self, trade):
         loc = np.where(trade['status'] == 'open')
-        entry_point = trade.iloc[loc][['side', 'status', 'price']]
+        entry_point = trade.iloc[loc][['side', 'status', 'price', 'pnl']]
         
         loc = np.where(trade['status'] == 'close')
-        exit_point = trade.iloc[loc][['side', 'status', 'price']]
+        exit_point = trade.iloc[loc][['side', 'status', 'price', 'pnl']]
         
         return entry_point, exit_point
     

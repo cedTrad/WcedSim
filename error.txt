@@ -1,0 +1,2 @@
+PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'C:\\Users\\cc\\Desktop\\CedAlgo\\WcedSim\\data\\P1'
+

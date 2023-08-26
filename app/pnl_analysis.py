@@ -6,14 +6,12 @@ from .plot import add_line
 
 from .evaluation.metric import Metric
 from .preprocessing import Preprocessing
-from app.journal import Journal
-
 
 
 class PNL(Metric):
     
-    def __init__(self, db_trades):
-        self.journal = Journal(db_trades = db_trades)
+    def __init__(self, journal = None):
+        self.journal = journal
         self.preprocessing = Preprocessing()
     
     
@@ -23,18 +21,22 @@ class PNL(Metric):
         self.symbols = list(assets_data.keys())
     
     
-    def run(self):
+    def run(self, monitoring = True):
         data = self.metrics.run()
         for symbol in self.symbols:
-            self.journal.save_metrics(data[symbol]["data"])
+            self.journal.metrics(data[symbol]["data"], monitoring)
+            #self.journal.metrics(data[symbol]["long"])
+            #self.journal.metrics(data[symbol]["short"])
+        m_data = self.journal.metrics_data
+        self.metrics_data = self.preprocessing.split_metrics(m_data)
+            
     
-    
-    def report(self, engine):
-        data = pd.read_sql('metrics', engine)
-        self.metrics_data = self.preprocessing.split_metrics(data)
+    #def report(self, engine):
+    #    data = pd.read_sql('metrics', engine)
+    #    self.metrics_data = self.preprocessing.split_metrics(data)
         
     
-    def viz_distribution(self, symbol):
+    def viz_distribution(self, symbol, assets_data = None):
         data_long = self.assets_data[symbol]["long"]
         data_short = self.assets_data[symbol]["short"]
         
@@ -53,7 +55,7 @@ class PNL(Metric):
         return fig
     
     
-    def plot_metric(self, symbol, features):
+    def plot_metric(self, symbol, features, metrics_data = None):
         data = self.metrics_data[symbol]
         
         fig = go.Figure()

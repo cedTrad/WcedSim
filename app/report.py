@@ -18,16 +18,12 @@ class Report:
     def __init__(self, name = 'w', interval = "1d", start = "", end = "",
                  db_trades = "simulation_"):
         self.name = 'w'
-        self.interval = interval
-        self.start = start
-        self.end = end
-        self.db = connect_db(name = "database", interval = self.interval)
-        self.engine = create_engine(f"sqlite:///data/{db_trades}.db")
+
+        self.db = connect_db(name = "database", interval = interval)
+        self.engine = create_engine(f"sqlite:///data/{db_trades}")
         
-        self.symbols = []
-        self.assets = {}
         self.preprocessing = Preprocessing()
-        self.pnl = PNL(db_trades = db_trades)
+        self.pnl = PNL()
     
     
     def get_data(self, data = None, portfolio_data = None, metrics_data = None):
@@ -44,7 +40,6 @@ class Report:
         self.symbols = list(self.data.symbol.unique())
         self.data, self.portfolio_data = self.preprocessing.pre_preprocess(trade = self.data, portfolio_data = self.portfolio_data)
         self.assets_data = self.preprocessing.split_asset(self.data)
-        self.pnl.get_trades(assets_data = self.assets_data)
         self.p_evalutation = PEvalutation(self.portfolio_data)
     
 
@@ -59,13 +54,6 @@ class Report:
             self.preprocessing.recovery_per_trade(df["data"])
             self.preprocessing.add_features(df["long"])
             self.preprocessing.add_features(df["short"])
-        self.pnl.run()
-        self.pnl.report(self.engine)
-        
-    
-    def viz_cppi(self, fig, data, floor, cushion):
-        add_line(fig, col=None, row=None, data=data, feature=feature, name="floor")
-        add_line(fig, col=None, row=None, data=data, feature=feature, name="cushion")
         
     
     def viz_asset(self, data, asset, portfolio):
@@ -74,8 +62,9 @@ class Report:
         
         add_line(fig=fig, col=1, row=1, data=asset, feature='rets', name='return')
         #add_bar(fig=fig, col=1, row=1, data=asset, feature='pnl_pct', name='pnl_pct')
-        add_second_y(fig=fig, col=1, row=1, data=asset, name='position')
+        #add_second_y(fig=fig, col=1, row=1, data=asset, name='position')
         
+        add_second_y(fig=fig, col=1, row=2, data=asset, name='position')
         plot_candle(fig=fig, col=1, row=2, data=data, symbol='ohlc')
         signal_point(fig, col=1, row=2, x = entry_point.index, y = entry_point.price, name='in', marker=(5, 10, 'blue'))
         signal_point(fig, col=1, row=2, x = exit_point.index, y = exit_point.price, name='out', marker=(6, 10, 'black'))
@@ -170,7 +159,7 @@ class Report:
                           margin = {'t':0, 'b':0, 'l':10, 'r':0}
                           )
         return fig
-        #n=
+
         
     def plot_cppi(self):
         fig = subplots2(nb_rows=2, nb_cols=1, row_heights=[0.7, 0.3])

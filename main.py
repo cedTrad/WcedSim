@@ -12,7 +12,8 @@ import pytz
 st.set_page_config(
     page_title="Overview",
     page_icon=":money_with_wings:",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 st.title("OverViews")
@@ -20,14 +21,5 @@ st.title("OverViews")
 
 
 
-
-
-
-
 # streamlit run c:/Users/cc/Desktop/CedAlgo/WcedSim/main.py
-
-
-
-
-
 

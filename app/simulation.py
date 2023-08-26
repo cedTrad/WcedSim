@@ -5,7 +5,7 @@ from .order import OrderManagement
 from .signals import Signal
 from .journal import Journal
 
-from .report import Report
+from .monitoring import Monitoring
 from .manager import Manager, error_msg
 
 from .risk.risk_management import RiskManagement
@@ -20,17 +20,14 @@ class Simulation:
         self.start = start
         self.end = end
         self.capital = capital
-        self.prev_decision = None
         self.order = OrderManagement(capital)
         
         self.portfolio = Portfolio("W", capital)
-        
         self.journal = Journal(db_trades = db_trades)
-        
         self.signal = Signal()
-        self.report = Report(start = start, end = end, db_trades = db_trades)
+        #self.report = Report(start = start, end = end, db_trades = db_trades)
+        self.monitoring = Monitoring(symbols=symbols, journal=self.journal)
         self.manager = Manager(self.portfolio)
-        
         
     
     
@@ -57,7 +54,6 @@ class Simulation:
     def risk_config(self, m, floor):
         self.portfolio.risk.config_cppi(m=m, floor=floor)
           
-        
         
     def execute(self, asset, bar):
         symbol = asset.symbol
@@ -91,7 +87,7 @@ class Simulation:
         elif order["status"] == "C_LONG" or order["status"] == "C_SHORT":            
             self.portfolio.update_value(asset, close=True)
         
-        self.journal.save_data(date, price, asset, self.portfolio)
+        self.journal.add_data(date, price, asset, self.portfolio)
     
     
     def set_assets(self):
@@ -120,14 +116,13 @@ class Simulation:
             data = self.journal.data
             portfolio_data = self.journal.portfolio_data
             
-            self.report.run(data, portfolio_data)
+            self.monitoring.run(trades = data, portfoliodf = portfolio_data)
             
-            #self.report.run()
             #display(data)
             print(f"{bar} / {self.n}")
             if bar == self.n:
                 break
-        
+        self.journal.save_data()
     
 
 

@@ -34,7 +34,7 @@ class Signal:
         add = pd.DataFrame(matrix, [bar])
         self.strategies_matrix = pd.concat([self.strategies_matrix, add], ignore_index=True)
         #self.strategies_matrix = self.strategies_matrix.append(add)
-        return s2
+        return s1
         
     
     def get_ml_signal(self, bar, model):

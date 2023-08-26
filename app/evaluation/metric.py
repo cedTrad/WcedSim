@@ -40,13 +40,12 @@ class Metric:
         add_st["profit_factor"] = self.profit_factor
         return add_st
     
-    
-    
+     
     def pnl(self, r):
         x = (1 + r).prod()
         return x    
 
-    
+
     def average(self, r):
         if len(r) == 0:
             return 0
@@ -132,6 +131,7 @@ class Metric:
         self.df[symbol] = col
         add = self.get_stats(symbol)
         return add
+        
         
         
     def run(self):
